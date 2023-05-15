@@ -1,6 +1,8 @@
 Adding a new `nuke` statement
 ===
 
+Explainer video: https://youtu.be/mLNNKl0oGiQ
+
 To understand the CPython codebase better, let's make a significant change and add the `nuke` command that just exits the program abruptly with an exit code of `45`.
 
 ```
