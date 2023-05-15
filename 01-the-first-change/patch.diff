@@ -1,0 +1,12 @@
+diff --git a/Modules/main.c b/Modules/main.c
+index 7edfeb3365..f12901d2fc 100644
+--- a/Modules/main.c
++++ b/Modules/main.c
+@@ -707,6 +707,7 @@ Py_RunMain(void)
+ static int
+ pymain_main(_PyArgv *args)
+ {
++    printf("Arpit's version of CPython\n");
+     PyStatus status = pymain_init(args);
+     if (_PyStatus_IS_EXIT(status)) {
+         pymain_free();
