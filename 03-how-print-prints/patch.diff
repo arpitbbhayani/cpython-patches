@@ -1,0 +1,20 @@
+diff --git a/Python/bltinmodule.c b/Python/bltinmodule.c
+index ddddc03ca3..b277d8a55a 100644
+--- a/Python/bltinmodule.c
++++ b/Python/bltinmodule.c
+@@ -2035,7 +2035,14 @@ builtin_print_impl(PyObject *module, PyObject *args, PyObject *sep,
+                 return NULL;
+             }
+         }
+-        err = PyFile_WriteObject(PyTuple_GET_ITEM(args, i), file, Py_PRINT_RAW);
++        PyObject *obj = PyTuple_GET_ITEM(args, i);
++        PyObject *ref = PyUnicode_FromFormat("<%s:%d> ", obj->ob_type->tp_name, obj->ob_refcnt);
++        err = PyFile_WriteObject(ref, file, Py_PRINT_RAW);
++        if (err) {
++            return NULL;
++        }
++
++        err = PyFile_WriteObject(obj, file, Py_PRINT_RAW);
+         if (err) {
+             return NULL;
+         }
