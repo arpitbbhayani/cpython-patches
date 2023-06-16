@@ -1,0 +1,70 @@
+diff --git a/Grammar/python.gram b/Grammar/python.gram
+index 6361dcd098..502d2298ed 100644
+--- a/Grammar/python.gram
++++ b/Grammar/python.gram
+@@ -785,6 +785,7 @@ await_primary[expr_ty] (memo):
+ 
+ primary[expr_ty]:
+     | a=primary '.' b=NAME { _PyAST_Attribute(a, b->v.Name.id, Load, EXTRA) }
++    | a=primary '->' b=NAME { _PyAST_Attribute(a, b->v.Name.id, Load, EXTRA) }
+     | a=primary b=genexp { _PyAST_Call(a, CHECK(asdl_expr_seq*, (asdl_expr_seq*)_PyPegen_singleton_seq(p, b)), NULL, EXTRA) }
+     | a=primary '(' b=[arguments] ')' {
+         _PyAST_Call(a,
+diff --git a/Parser/parser.c b/Parser/parser.c
+index 6eb985a7d3..ea4ac85e7b 100644
+--- a/Parser/parser.c
++++ b/Parser/parser.c
+@@ -13791,6 +13791,7 @@ await_primary_rule(Parser *p)
+ // Left-recursive
+ // primary:
+ //     | primary '.' NAME
++//     | primary '->' NAME
+ //     | primary genexp
+ //     | primary '(' arguments? ')'
+ //     | primary '[' slices ']'
+@@ -13892,6 +13893,45 @@ primary_raw(Parser *p)
+         D(fprintf(stderr, "%*c%s primary[%d-%d]: %s failed!\n", p->level, ' ',
+                   p->error_indicator ? "ERROR!" : "-", _mark, p->mark, "primary '.' NAME"));
+     }
++    { // primary '->' NAME
++        if (p->error_indicator) {
++            p->level--;
++            return NULL;
++        }
++        D(fprintf(stderr, "%*c> primary[%d-%d]: %s\n", p->level, ' ', _mark, p->mark, "primary '->' NAME"));
++        Token * _literal;
++        expr_ty a;
++        expr_ty b;
++        if (
++            (a = primary_rule(p))  // primary
++            &&
++            (_literal = _PyPegen_expect_token(p, 51))  // token='->'
++            &&
++            (b = _PyPegen_name_token(p))  // NAME
++        )
++        {
++            D(fprintf(stderr, "%*c+ primary[%d-%d]: %s succeeded!\n", p->level, ' ', _mark, p->mark, "primary '->' NAME"));
++            Token *_token = _PyPegen_get_last_nonnwhitespace_token(p);
++            if (_token == NULL) {
++                p->level--;
++                return NULL;
++            }
++            int _end_lineno = _token->end_lineno;
++            UNUSED(_end_lineno); // Only used by EXTRA macro
++            int _end_col_offset = _token->end_col_offset;
++            UNUSED(_end_col_offset); // Only used by EXTRA macro
++            _res = _PyAST_Attribute ( a , b -> v . Name . id , Load , EXTRA );
++            if (_res == NULL && PyErr_Occurred()) {
++                p->error_indicator = 1;
++                p->level--;
++                return NULL;
++            }
++            goto done;
++        }
++        p->mark = _mark;
++        D(fprintf(stderr, "%*c%s primary[%d-%d]: %s failed!\n", p->level, ' ',
++                  p->error_indicator ? "ERROR!" : "-", _mark, p->mark, "primary '->' NAME"));
++    }
+     { // primary genexp
+         if (p->error_indicator) {
+             p->level--;
