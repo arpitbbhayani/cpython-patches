@@ -14,6 +14,7 @@ class Person:
 
 p1 = Person("arpit")
 print(p1.name)
+del(p1.name)
 ```
 
 What if Python supported accessing member attributes using
@@ -42,6 +43,9 @@ primary[expr_ty]:
     ...
 ```
 
+We find similar places where we create `_PyAST_Attribute` in the grammar file
+and add a new clause at every place.
+
 Please refer to the `patch.diff` file to understand what changed.
 
 ## Build and Run
@@ -64,6 +68,7 @@ class Person:
 
 p1 = Person("arpit")
 print(p1->name)
+del p1->name
 ```
 
 ```sh
